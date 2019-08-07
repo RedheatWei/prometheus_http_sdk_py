@@ -49,6 +49,9 @@ class PrometheusApiData(PrometheusApiDataBase):
             "result": self.result
         }
 
+    def __len__(self):
+        return len(self.result)
+
 
 class PrometheusApiDataResult(PrometheusApiDataBase):
     '''

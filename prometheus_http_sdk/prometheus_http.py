@@ -69,10 +69,48 @@ class PrometheusApi(object):
         else:
             raise PrometheusApiException(response["errorType"], response["error"])
 
+    def query_all(self, query, step=15):
+        '''
+        :param query: query
+        :param step: default 15s
+        :return:
+        '''
+        self.query = query
+        self.step = step
+        self.end = time.time()
+        self.start = self.end - (11000 * 15)
+        result = []
+        while True:
+            response = requests.post(
+                url=urljoin(self.url, "query_range"),
+                data={
+                    "query": self.query,
+                    "start": self.start,
+                    "end": self.end,
+                    "step": self.step
+                },
+                headers={"Content-Type": "application/x-www-form-urlencoded"}
+            )
+            response = json.loads(str(response.content, "utf-8"))
+            if response["status"] == "success":
+                if response["data"]['result']:
+                    result.extend(
+                        [PrometheusApiDataResult(query=self.query, start=self.start, end=self.end, step=self.step,
+                                                 values=i["values"]) for i in response["data"]['result']])
+                    self.end = self.start
+                    self.start = self.end - (11000 * 15)
+                else:
+                    break
+            else:
+                raise PrometheusApiException(response["errorType"], response["error"])
+        return PrometheusApiData(
+            resultType=response["data"].get("resultType"),
+            result=result
+        )
+
     @staticmethod
     def _range_time_stamp(range_time):
         '''
-
         :param range_time: range time
             m minute
             h hour
@@ -107,5 +145,9 @@ if __name__ == "__main__":
     data = PrometheusApi("http://prometheus").query_range(
         query=":node_cpu_saturation_load1:",
         range_time="6h",
+    )
+    print(data)
+    data = PrometheusApi("http://prometheus.ps.appeasou.com").query_all(
+        query=":node_cpu_saturation_load1:",
     )
     print(data)

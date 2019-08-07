@@ -11,6 +11,15 @@ data = PrometheusApi("http://prometheus").query_range(
 print(data)
 ```
 
+* get all data
+```python
+data = PrometheusApi("http://prometheus").query_all(
+        query=":node_cpu_saturation_load1:",
+        step=15
+    )
+print(data)
+```
+
 * cover to dict
 
 ```python

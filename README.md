@@ -2,6 +2,11 @@
 
 ## Example
 
+* import
+```python
+from prometheus_http_sdk.prometheus_http import PrometheusApi
+```
+
 * get data
 ```python
 data = PrometheusApi("http://prometheus").query_range(
@@ -20,14 +25,21 @@ data = PrometheusApi("http://prometheus").query_all(
 print(data)
 ```
 
-* cover to dict
+* convert to dict
 
 ```python
-data.coverDict()
+data.convertDict()
 ```
 
-* cover to json
+* convert to dict with tensorflow type
 
 ```python
-data.coverJson()
+data.convertDict(tfType=True)
+```
+
+
+* convert to json
+
+```python
+data.convertJson()
 ```

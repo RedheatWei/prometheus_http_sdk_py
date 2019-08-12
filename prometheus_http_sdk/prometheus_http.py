@@ -63,7 +63,8 @@ class PrometheusApi(object):
         if response["status"] == "success":
             return PrometheusApiData(
                 resultType=response["data"].get("resultType"),
-                result=[PrometheusApiDataResult(query=self.query, start=self.start, end=self.end, step=self.step,
+                result=[PrometheusApiDataResult(query=i["metric"]["__name__"], start=self.start, end=self.end,
+                                                step=self.step,
                                                 values=i["values"]) for i in response["data"]['result']]
             )
         else:
@@ -95,8 +96,9 @@ class PrometheusApi(object):
             if response["status"] == "success":
                 if response["data"]['result']:
                     result.extend(
-                        [PrometheusApiDataResult(query=self.query, start=self.start, end=self.end, step=self.step,
-                                                 values=i["values"]) for i in response["data"]['result']])
+                        [PrometheusApiDataResult(query=i["metric"]["__name__"], start=self.start, end=self.end,
+                                                 step=self.step, values=i["values"]) for i in
+                         response["data"]['result']])
                     self.end = self.start
                     self.start = self.end - (11000 * 15)
                 else:
@@ -107,6 +109,21 @@ class PrometheusApi(object):
             resultType=response["data"].get("resultType"),
             result=result
         )
+
+    def merage(self, data):
+        d = {}
+        for i in data.result:
+            for j in i.values:
+                if j[0] in d:
+                    d[j[0]].update({i.query: j[1]})
+                else:
+                    d[j[0]] = {i.query: j[1]}
+        a = []
+        for k, v in d.items():
+            x = {"time": k}
+            x.update(v)
+            a.append(x)
+        return a
 
     @staticmethod
     def _range_time_stamp(range_time):
@@ -142,12 +159,13 @@ class PrometheusApi(object):
 
 
 if __name__ == "__main__":
-    data = PrometheusApi("http://prometheus").query_range(
-        query=":node_cpu_saturation_load1:",
-        range_time="6h",
+    data = PrometheusApi("http://prometheus.ps.appeasou.com").query_range(
+        query='{__name__=~":node_cpu_saturation_load1:"}',
+        range_time="1m",
+        step=15
     )
-    print(data)
+    print(data.convertDict(tfType=True))
     data = PrometheusApi("http://prometheus.ps.appeasou.com").query_all(
-        query=":node_cpu_saturation_load1:",
+        query='{__name__=~":node_cpu_saturation_load1:|:node_memory_utilisation:"}',
     )
-    print(data)
+    print(data.convertDict())

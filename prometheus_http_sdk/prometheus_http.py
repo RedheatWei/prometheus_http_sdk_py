@@ -70,16 +70,20 @@ class PrometheusApi(object):
         else:
             raise PrometheusApiException(response["errorType"], response["error"])
 
-    def query_all(self, query, step=15):
+    def query_all(self, query, step=15, end=None):
         '''
         :param query: query
         :param step: default 15s
+        :param end: end time, default is now
         :return:
         '''
         self.query = query
         self.step = step
-        self.end = time.time()
-        self.start = self.end - (11000 * 15)
+        if end is None:
+            self.end = time.time()
+        else:
+            self.end = end
+        self.start = self.end - (11000 * self.step)
         result = []
         while True:
             response = requests.post(
@@ -100,7 +104,7 @@ class PrometheusApi(object):
                                                  step=self.step, values=i["values"]) for i in
                          response["data"]['result']])
                     self.end = self.start
-                    self.start = self.end - (11000 * 15)
+                    self.start = self.end - (11000 * self.step)
                 else:
                     break
             else:
@@ -159,13 +163,15 @@ class PrometheusApi(object):
 
 
 if __name__ == "__main__":
-    data = PrometheusApi("http://prometheus.ps.appeasou.com").query_range(
+    data = PrometheusApi("http://prometheus").query_range(
         query='{__name__=~":node_cpu_saturation_load1:"}',
         range_time="1m",
         step=15
     )
     print(data.convertDict(tfType=True))
-    data = PrometheusApi("http://prometheus.ps.appeasou.com").query_all(
+    data = PrometheusApi("http://prometheus").query_all(
         query='{__name__=~":node_cpu_saturation_load1:|:node_memory_utilisation:"}',
+        step=60,
+        end=time.time()-600
     )
     print(data.convertDict())

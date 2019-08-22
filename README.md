@@ -20,7 +20,8 @@ print(data)
 ```python
 data = PrometheusApi("http://prometheus").query_all(
         query=":node_cpu_saturation_load1:",
-        step=15
+        step=60,
+        end=time.time()-600
     )
 print(data)
 ```

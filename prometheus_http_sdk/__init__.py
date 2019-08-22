@@ -7,5 +7,5 @@
 '''
 __title__ = 'prometheus_http_sdk_py'
 __author__ = 'Redheat'
-__version__ = '0.0.3'
+__version__ = '0.0.4'
 __license__ = 'Apache 2.0'
